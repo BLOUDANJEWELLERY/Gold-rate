@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Gold Rate</title>
+<title>Live Gold Rates</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #faf9f6; color: #333; }
-.container { max-width: 600px; margin: auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.container { max-width: 700px; margin: auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 h1 { color: #b8860b; }
-.rate { font-size: 1.5em; margin: 10px 0; }
+.rate { font-size: 1.3em; margin: 8px 0; }
 .sub { color: #666; font-size: 0.9em; }
-button { background: #b8860b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+button { background: #b8860b; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; margin: 5px; }
 button:hover { background: #a0760a; }
 .chart-container { margin-top: 30px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Live Gold Rate</h1>
+  <h1>Live Gold Rates</h1>
   <div id="rates">
     <div id="rate24" class="rate">24K: Loading...</div>
     <div id="rate22" class="rate">22K: Loading...</div>
@@ -26,10 +26,9 @@ button:hover { background: #a0760a; }
     <div id="rate18" class="rate">18K: Loading...</div>
   </div>
   <div id="timestamp" class="sub"></div>
-  <button onclick="fetchGold()">Refresh</button>
 
   <div class="chart-container">
-    <canvas id="goldChart" height="200"></canvas>
+    <canvas id="goldChart" height="250"></canvas>
     <div>
       <button onclick="changeTimeframe('10m')">10m</button>
       <button onclick="changeTimeframe('1h')">1h</button>
@@ -39,11 +38,12 @@ button:hover { background: #a0760a; }
 </div>
 
 <script>
+let goldHistory = []; // store 24K history
 let chart;
-let goldHistory = []; // stores price history
 let timeframe = '10m';
+const USD_TO_KWD = 0.31;
 
-function calculatePurity(price24k) {
+function calculatePurities(price24k) {
   return {
     '24K': price24k,
     '22K': price24k * 22/24,
@@ -52,25 +52,26 @@ function calculatePurity(price24k) {
   };
 }
 
+// Fetch latest gold price from API
 async function fetchGold() {
   try {
     const res = await fetch("https://api.gold-api.com/price/XAU");
     const data = await res.json();
-    const price24k = data.price / 31.1035; // price per gram
+    const pricePerGram24k = data.price / 31.1035; // USD per gram
+    const purities = calculatePurities(pricePerGram24k);
 
-    const rates = calculatePurity(price24k);
-
-    document.getElementById("rate24").innerText = `24K: $${rates['24K'].toFixed(2)} / g`;
-    document.getElementById("rate22").innerText = `22K: $${rates['22K'].toFixed(2)} / g`;
-    document.getElementById("rate21").innerText = `21K: $${rates['21K'].toFixed(2)} / g`;
-    document.getElementById("rate18").innerText = `18K: $${rates['18K'].toFixed(2)} / g`;
+    // Update rates display
+    document.getElementById("rate24").innerText = `24K: $${purities['24K'].toFixed(2)} / g`;
+    document.getElementById("rate22").innerText = `22K: $${purities['22K'].toFixed(2)} / g`;
+    document.getElementById("rate21").innerText = `21K: $${purities['21K'].toFixed(2)} / g`;
+    document.getElementById("rate18").innerText = `18K: $${purities['18K'].toFixed(2)} / g`;
 
     document.getElementById("timestamp").innerText = "Last updated: " + data.updatedAtReadable;
 
-    // Add to chart history
+    // Add to history
     const now = new Date();
-    goldHistory.push({time: now, price: price24k});
-    if(goldHistory.length > 1000) goldHistory.shift(); // limit history
+    goldHistory.push({time: now, purities});
+    if (goldHistory.length > 1000) goldHistory.shift();
 
     updateChart();
   } catch (err) {
@@ -78,51 +79,69 @@ async function fetchGold() {
   }
 }
 
-// Chart.js setup
+// Initialize Chart.js
 function initChart() {
   const ctx = document.getElementById('goldChart').getContext('2d');
   chart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: goldHistory.map(d => d.time.toLocaleTimeString()),
-      datasets: [{
-        label: '24K Gold Price ($/g)',
-        data: goldHistory.map(d => d.price),
-        borderColor: '#b8860b',
-        backgroundColor: 'rgba(184,134,11,0.1)',
-        fill: true,
-        tension: 0.3
-      }]
+      datasets: [
+        { label: '24K', data: goldHistory.map(d => d.purities['24K']), borderColor: '#b8860b', fill: false, tension:0.3 },
+        { label: '22K', data: goldHistory.map(d => d.purities['22K']), borderColor: '#888', fill: false, tension:0.3 },
+        { label: '21K', data: goldHistory.map(d => d.purities['21K']), borderColor: '#4caf50', fill: false, tension:0.3 },
+        { label: '18K', data: goldHistory.map(d => d.purities['18K']), borderColor: '#2196f3', fill: false, tension:0.3 }
+      ]
     },
     options: {
       responsive: true,
-      animation: false,
+      animation: { duration: 1000 }, // smooth animation 1s
       scales: {
         x: { display: true, title: { display: true, text: 'Time' } },
         y: { display: true, title: { display: true, text: 'Price ($/g)' } }
-      }
+      },
+      plugins: { legend: { position: 'top' } }
     }
   });
 }
 
+// Update chart every second (smooth)
 function updateChart() {
   if(!chart) initChart();
-  chart.data.labels = goldHistory.map(d => d.time.toLocaleTimeString());
-  chart.data.datasets[0].data = goldHistory.map(d => d.price);
-  chart.update('none');
+
+  // Filter history based on timeframe
+  const now = new Date();
+  let filtered = goldHistory;
+  if(timeframe === '10m') {
+    filtered = goldHistory.filter(d => now - d.time <= 10*60*1000);
+  } else if(timeframe === '1h') {
+    filtered = goldHistory.filter(d => now - d.time <= 60*60*1000);
+  } else if(timeframe === '1d') {
+    filtered = goldHistory.filter(d => now - d.time <= 24*60*60*1000);
+  }
+
+  chart.data.labels = filtered.map(d => d.time.toLocaleTimeString());
+  chart.data.datasets[0].data = filtered.map(d => d.purities['24K']);
+  chart.data.datasets[1].data = filtered.map(d => d.purities['22K']);
+  chart.data.datasets[2].data = filtered.map(d => d.purities['21K']);
+  chart.data.datasets[3].data = filtered.map(d => d.purities['18K']);
+  chart.update();
 }
 
 function changeTimeframe(tf) {
   timeframe = tf;
-  // You could filter goldHistory based on timeframe for better graph
   updateChart();
 }
 
-// Load first time
+// Initial load
 fetchGold();
 initChart();
-// Refresh every 10 seconds
+
+// Fetch every 10 seconds
 setInterval(fetchGold, 10000);
+
+// Optional: smooth animation update every second
+setInterval(updateChart, 1000);
 </script>
 </body>
 </html>
