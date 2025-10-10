@@ -1,133 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Metal Prices</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #faf9f6;
-      color: #222;
-      text-align: center;
-      padding: 40px;
-    }
-    .container {
-      max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 30px;
-    }
-    h1 {
-      color: #b8860b;
-      margin-bottom: 20px;
-    }
-    select {
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 1em;
-      margin-bottom: 15px;
-    }
-    .rate {
-      font-size: 2em;
-      margin: 15px 0;
-    }
-    .sub {
-      color: #666;
-      font-size: 0.9em;
-    }
-    button {
-      background: #b8860b;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    button:hover {
-      background: #a0760a;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Gold Rate</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #faf9f6; color: #333; }
+.container { max-width: 400px; margin: auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+h1 { color: #b8860b; }
+.rate { font-size: 2em; margin: 20px 0; }
+.sub { color: #666; font-size: 0.9em; }
+button { background: #b8860b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px; }
+button:hover { background: #a0760a; }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Live Metal Prices</h1>
+<div class="container">
+  <h1>Live Gold Rate</h1>
+  <div id="usdRate" class="rate">Loading...</div>
+  <div id="gramRate" class="sub"></div>
+  <div id="kwdRate" class="sub"></div>
+  <p id="timestamp" class="sub"></p>
+  <button onclick="fetchGold()">Refresh</button>
+</div>
 
-    <select id="metalSelect" onchange="fetchPrice()">
-      <option value="">Loading metals...</option>
-    </select>
+<script>
+async function fetchGold() {
+  try {
+    const res = await fetch("https://api.gold-api.com/price/XAU");
+    const data = await res.json();
+    const usdPerOunce = data.price;
+    const usdPerGram = usdPerOunce / 31.1035;
+    const usdToKwd = 0.31; // example conversion rate
+    const kwdPerGram = usdPerGram * usdToKwd;
 
-    <div id="usdRate" class="rate">--</div>
-    <div id="gramRate" class="sub"></div>
-    <div id="kwdRate" class="sub"></div>
-    <p id="timestamp" class="sub"></p>
+    document.getElementById("usdRate").innerText = `$${usdPerOunce.toFixed(2)} / oz`;
+    document.getElementById("gramRate").innerText = `$${usdPerGram.toFixed(2)} / gram`;
+    document.getElementById("kwdRate").innerText = `${kwdPerGram.toFixed(3)} KWD / gram`;
+    document.getElementById("timestamp").innerText = "Last updated: " + data.updatedAtReadable;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("usdRate").innerText = "Error fetching data";
+  }
+}
 
-    <button onclick="fetchPrice()">Refresh</button>
-  </div>
-
-  <script>
-    async function loadSymbols() {
-      try {
-        const res = await fetch("https://api.gold-api.com/symbols");
-        const data = await res.json();
-
-        const select = document.getElementById("metalSelect");
-        select.innerHTML = ""; // clear previous
-
-        data.forEach(item => {
-          const opt = document.createElement("option");
-          opt.value = item.symbol;
-          opt.textContent = item.name;
-          if (item.symbol === "XAU") opt.selected = true; // default Gold
-          select.appendChild(opt);
-        });
-
-        fetchPrice(); // fetch first metal
-      } catch (error) {
-        console.error("Error loading symbols:", error);
-        document.getElementById("metalSelect").innerHTML =
-          "<option>Error loading symbols</option>";
-      }
-    }
-
-    async function fetchPrice() {
-      const symbol = document.getElementById("metalSelect").value || "XAU";
-      const pair = symbol + "USD"; // example: XAUUSD or XAGUSD
-      try {
-        const res = await fetch(`https://api.gold-api.com/price/${pair}`);
-        const data = await res.json();
-
-        if (!data.price) {
-          document.getElementById("usdRate").innerText = "Data unavailable";
-          return;
-        }
-
-        const usdPerOunce = data.price;
-        const usdPerGram = usdPerOunce / 31.1035;
-        const usdToKwd = 0.31;
-        const kwdPerGram = usdPerGram * usdToKwd;
-
-        document.getElementById("usdRate").innerText = `$${usdPerOunce.toFixed(2)} / oz`;
-        document.getElementById("gramRate").innerText = `$${usdPerGram.toFixed(2)} / gram`;
-        document.getElementById("kwdRate").innerText = `${kwdPerGram.toFixed(3)} KWD / gram`;
-
-        const time = new Date(data.timestamp * 1000).toLocaleTimeString();
-        document.getElementById("timestamp").innerText = "Last updated: " + time;
-      } catch (error) {
-        console.error("Error fetching price:", error);
-        document.getElementById("usdRate").innerText = "Error fetching data";
-      }
-    }
-
-    // Load symbols when page starts
-    loadSymbols();
-
-    // Refresh automatically every 60 seconds
-    setInterval(fetchPrice, 60000);
-  </script>
+// Load first time
+fetchGold();
+// Refresh every minute
+setInterval(fetchGold, 60000);
+</script>
 </body>
 </html>
