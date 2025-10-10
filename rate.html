@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Gold Rate</title>
+  <title>Live Metal Prices</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -22,7 +22,14 @@
     }
     h1 {
       color: #b8860b;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    select {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      margin-bottom: 15px;
     }
     .rate {
       font-size: 2em;
@@ -48,19 +55,51 @@
 </head>
 <body>
   <div class="container">
-    <h1>Live Gold Rate</h1>
-    <div id="usdRate" class="rate">Loading...</div>
+    <h1>Live Metal Prices</h1>
+
+    <select id="metalSelect" onchange="fetchPrice()">
+      <option value="">Loading metals...</option>
+    </select>
+
+    <div id="usdRate" class="rate">--</div>
     <div id="gramRate" class="sub"></div>
     <div id="kwdRate" class="sub"></div>
     <p id="timestamp" class="sub"></p>
-    <button onclick="fetchGold()">Refresh</button>
+
+    <button onclick="fetchPrice()">Refresh</button>
   </div>
 
   <script>
-    async function fetchGold() {
+    async function loadSymbols() {
       try {
-        const response = await fetch("https://api.gold-api.com/price/XAUUSD");
-        const data = await response.json();
+        const res = await fetch("https://api.gold-api.com/symbols");
+        const data = await res.json();
+
+        const select = document.getElementById("metalSelect");
+        select.innerHTML = ""; // clear previous
+
+        data.forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item.symbol;
+          opt.textContent = item.name;
+          if (item.symbol === "XAU") opt.selected = true; // default Gold
+          select.appendChild(opt);
+        });
+
+        fetchPrice(); // fetch first metal
+      } catch (error) {
+        console.error("Error loading symbols:", error);
+        document.getElementById("metalSelect").innerHTML =
+          "<option>Error loading symbols</option>";
+      }
+    }
+
+    async function fetchPrice() {
+      const symbol = document.getElementById("metalSelect").value || "XAU";
+      const pair = symbol + "USD"; // example: XAUUSD or XAGUSD
+      try {
+        const res = await fetch(`https://api.gold-api.com/price/${pair}`);
+        const data = await res.json();
 
         if (!data.price) {
           document.getElementById("usdRate").innerText = "Data unavailable";
@@ -69,8 +108,6 @@
 
         const usdPerOunce = data.price;
         const usdPerGram = usdPerOunce / 31.1035;
-
-        // Static conversion USD → KWD (approx)
         const usdToKwd = 0.31;
         const kwdPerGram = usdPerGram * usdToKwd;
 
@@ -81,14 +118,16 @@
         const time = new Date(data.timestamp * 1000).toLocaleTimeString();
         document.getElementById("timestamp").innerText = "Last updated: " + time;
       } catch (error) {
-        console.error("Error fetching gold rate:", error);
+        console.error("Error fetching price:", error);
         document.getElementById("usdRate").innerText = "Error fetching data";
       }
     }
 
-    // Auto-refresh every minute
-    fetchGold();
-    setInterval(fetchGold, 60000);
+    // Load symbols when page starts
+    loadSymbols();
+
+    // Refresh automatically every 60 seconds
+    setInterval(fetchPrice, 60000);
   </script>
 </body>
 </html>
