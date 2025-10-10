@@ -4,50 +4,125 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Live Gold Rate</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #faf9f6; color: #333; }
-.container { max-width: 400px; margin: auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.container { max-width: 600px; margin: auto; background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
 h1 { color: #b8860b; }
-.rate { font-size: 2em; margin: 20px 0; }
+.rate { font-size: 1.5em; margin: 10px 0; }
 .sub { color: #666; font-size: 0.9em; }
 button { background: #b8860b; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 15px; }
 button:hover { background: #a0760a; }
+.chart-container { margin-top: 30px; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>Live Gold Rate</h1>
-  <div id="usdRate" class="rate">Loading...</div>
-  <div id="gramRate" class="sub"></div>
-  <div id="kwdRate" class="sub"></div>
-  <p id="timestamp" class="sub"></p>
+  <div id="rates">
+    <div id="rate24" class="rate">24K: Loading...</div>
+    <div id="rate22" class="rate">22K: Loading...</div>
+    <div id="rate21" class="rate">21K: Loading...</div>
+    <div id="rate18" class="rate">18K: Loading...</div>
+  </div>
+  <div id="timestamp" class="sub"></div>
   <button onclick="fetchGold()">Refresh</button>
+
+  <div class="chart-container">
+    <canvas id="goldChart" height="200"></canvas>
+    <div>
+      <button onclick="changeTimeframe('10m')">10m</button>
+      <button onclick="changeTimeframe('1h')">1h</button>
+      <button onclick="changeTimeframe('1d')">1d</button>
+    </div>
+  </div>
 </div>
 
 <script>
+let chart;
+let goldHistory = []; // stores price history
+let timeframe = '10m';
+
+function calculatePurity(price24k) {
+  return {
+    '24K': price24k,
+    '22K': price24k * 22/24,
+    '21K': price24k * 21/24,
+    '18K': price24k * 18/24
+  };
+}
+
 async function fetchGold() {
   try {
     const res = await fetch("https://api.gold-api.com/price/XAU");
     const data = await res.json();
-    const usdPerOunce = data.price;
-    const usdPerGram = usdPerOunce / 31.1035;
-    const usdToKwd = 0.31; // example conversion rate
-    const kwdPerGram = usdPerGram * usdToKwd;
+    const price24k = data.price / 31.1035; // price per gram
 
-    document.getElementById("usdRate").innerText = `$${usdPerOunce.toFixed(2)} / oz`;
-    document.getElementById("gramRate").innerText = `$${usdPerGram.toFixed(2)} / gram`;
-    document.getElementById("kwdRate").innerText = `${kwdPerGram.toFixed(3)} KWD / gram`;
+    const rates = calculatePurity(price24k);
+
+    document.getElementById("rate24").innerText = `24K: $${rates['24K'].toFixed(2)} / g`;
+    document.getElementById("rate22").innerText = `22K: $${rates['22K'].toFixed(2)} / g`;
+    document.getElementById("rate21").innerText = `21K: $${rates['21K'].toFixed(2)} / g`;
+    document.getElementById("rate18").innerText = `18K: $${rates['18K'].toFixed(2)} / g`;
+
     document.getElementById("timestamp").innerText = "Last updated: " + data.updatedAtReadable;
+
+    // Add to chart history
+    const now = new Date();
+    goldHistory.push({time: now, price: price24k});
+    if(goldHistory.length > 1000) goldHistory.shift(); // limit history
+
+    updateChart();
   } catch (err) {
     console.error(err);
-    document.getElementById("usdRate").innerText = "Error fetching data";
   }
+}
+
+// Chart.js setup
+function initChart() {
+  const ctx = document.getElementById('goldChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: goldHistory.map(d => d.time.toLocaleTimeString()),
+      datasets: [{
+        label: '24K Gold Price ($/g)',
+        data: goldHistory.map(d => d.price),
+        borderColor: '#b8860b',
+        backgroundColor: 'rgba(184,134,11,0.1)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        x: { display: true, title: { display: true, text: 'Time' } },
+        y: { display: true, title: { display: true, text: 'Price ($/g)' } }
+      }
+    }
+  });
+}
+
+function updateChart() {
+  if(!chart) initChart();
+  chart.data.labels = goldHistory.map(d => d.time.toLocaleTimeString());
+  chart.data.datasets[0].data = goldHistory.map(d => d.price);
+  chart.update('none');
+}
+
+function changeTimeframe(tf) {
+  timeframe = tf;
+  // You could filter goldHistory based on timeframe for better graph
+  updateChart();
 }
 
 // Load first time
 fetchGold();
-// Refresh every minute
-setInterval(fetchGold, 60000);
+initChart();
+// Refresh every 10 seconds
+setInterval(fetchGold, 10000);
 </script>
 </body>
 </html>
