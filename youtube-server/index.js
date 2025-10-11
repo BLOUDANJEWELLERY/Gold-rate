@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 4000;
 
 // Allow Vercel frontend to call this server
 app.use(cors({
-  origin: ['https://your-vercel-domain.vercel.app'], // Replace with your Vercel URL
+  origin: ['https://bg-remover-silk.vercel.app/yt-download'], // Replace with your Vercel URL
 }));
 
 app.get('/download', async (req, res) => {
