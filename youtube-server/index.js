@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({
-  origin: ['https://your-vercel-domain.vercel.app'], // replace with your Vercel URL
+  origin: ['https://bg-remover-silk.vercel.app/yt-download'], // replace with your Vercel URL
 }));
 
 app.get('/download', async (req, res) => {
