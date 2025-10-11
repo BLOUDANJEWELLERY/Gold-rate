@@ -154,7 +154,7 @@
 </div>
 
 <script>
-const USD_TO_KWD = 0.31; // static conversion rate
+let USD_TO_KWD = 0.31;
 let goldHistory = [];
 let chart;
 let timeframe = '10m';
@@ -168,16 +168,28 @@ function calculatePurities(pricePerGram) {
   };
 }
 
+async function fetchUSDToKWD() {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
+    if (data && data.rates && data.rates.KWD) {
+      USD_TO_KWD = data.rates.KWD;
+      console.log("USD/KWD rate:", USD_TO_KWD);
+    }
+  } catch(err) {
+    console.error("Error fetching USD/KWD:", err);
+  }
+}
+
 async function fetchGold() {
   try {
     const res = await fetch("https://api.gold-api.com/price/XAU");
     const data = await res.json();
-
     const pricePerOunce = data.price;
     const pricePerGram = pricePerOunce / 31.1035;
     const purities = calculatePurities(pricePerGram);
 
-    // Update main display
+    // Update display
     document.getElementById("ounceRate").innerText = `$${pricePerOunce.toFixed(2)} / oz`;
     document.getElementById("rate24").innerText = `${(purities['24K']*USD_TO_KWD).toFixed(3)} KWD/g`;
     document.getElementById("rate22").innerText = `${(purities['22K']*USD_TO_KWD).toFixed(3)} KWD/g`;
@@ -192,7 +204,7 @@ async function fetchGold() {
     if (goldHistory.length > 1000) goldHistory.shift();
 
     updateChart();
-  } catch (err) {
+  } catch(err) {
     console.error("Error fetching gold data:", err);
   }
 }
@@ -245,10 +257,13 @@ function changeTimeframe(tf) {
 }
 
 // Initial load
-fetchGold();
-initChart();
-setInterval(fetchGold, 10000);
-setInterval(updateChart, 1000);
+fetchUSDToKWD().then(() => {
+  fetchGold();
+  initChart();
+  setInterval(fetchUSDToKWD, 600000); // update USD/KWD every 10 min
+  setInterval(fetchGold, 10000);       // fetch gold every 10 sec
+  setInterval(updateChart, 1000);      // smooth chart update
+});
 </script>
 
 </body>
