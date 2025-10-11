@@ -6,107 +6,118 @@
 <title>Live Gold Rates</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #fdf6f0;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-}
-.container {
-  width: 95%;
-  max-width: 800px;
-  background: #fff;
-  border-radius: 15px;
-  margin-top: 30px;
-  padding: 25px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-}
-h1 {
-  color: #b8860b;
-  margin-bottom: 10px;
-  font-size: 2em;
-}
-.ounce-rate {
-  font-size: 2em;
-  font-weight: bold;
-  color: #b8860b;
-  margin-bottom: 20px;
-}
-.rates {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  margin-bottom: 20px;
-}
-.rate-card {
-  background: #faf9f6;
-  padding: 15px 20px;
-  margin: 8px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  flex: 1 1 45%;
-  min-width: 120px;
-  text-align: center;
-}
-.rate-card h3 {
-  margin: 0;
-  font-size: 1.1em;
-  color: #555;
-}
-.rate-card p {
-  margin: 5px 0 0;
-  font-size: 1.2em;
-  font-weight: bold;
-  color: #222;
-}
-.chart-container {
-  margin-top: 25px;
-}
-.chart-container canvas {
-  width: 100% !important;
-  max-height: 300px;
-}
-.timeframe-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-.timeframe-buttons button {
-  background: #b8860b;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  margin: 0 5px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background 0.3s;
-}
-.timeframe-buttons button:hover {
-  background: #a0760a;
-}
-.timestamp {
-  text-align: center;
-  color: #666;
-  font-size: 0.9em;
-  margin-top: 8px;
-}
-@media (max-width: 500px) {
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #fdf6f0;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 800px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    padding: 30px;
+  }
+
+  h1 {
+    color: #b8860b;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .ounce-rate {
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+    color: #b8860b;
+    margin-bottom: 25px;
+  }
+
   .rates {
-    flex-direction: column;
-    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-bottom: 25px;
   }
+
   .rate-card {
-    flex: 1 1 90%;
+    background: #faf9f6;
+    flex: 1 1 45%;
+    min-width: 120px;
+    margin: 10px;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    text-align: center;
   }
-}
+
+  .rate-card h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #555;
+  }
+
+  .rate-card p {
+    margin: 8px 0 0;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .timestamp {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+  }
+
+  .chart-container {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .timeframe-buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .timeframe-buttons button {
+    background: #b8860b;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    margin: 5px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: 0.3s;
+  }
+
+  .timeframe-buttons button:hover {
+    background: #a0760a;
+  }
+
+  @media (max-width: 500px) {
+    .rates {
+      flex-direction: column;
+      align-items: center;
+    }
+    .rate-card {
+      flex: 1 1 90%;
+    }
+  }
 </style>
 </head>
 <body>
+
 <div class="container">
   <h1>Live Gold Rates</h1>
   <div class="ounce-rate" id="ounceRate">Loading...</div>
@@ -143,17 +154,17 @@ h1 {
 </div>
 
 <script>
+const USD_TO_KWD = 0.31; // static conversion rate
 let goldHistory = [];
 let chart;
 let timeframe = '10m';
-const USD_TO_KWD = 0.31;
 
-function calculatePurities(price24k) {
+function calculatePurities(pricePerGram) {
   return {
-    '24K': price24k,
-    '22K': price24k * 22/24,
-    '21K': price24k * 21/24,
-    '18K': price24k * 18/24
+    '24K': pricePerGram,
+    '22K': pricePerGram * 22/24,
+    '21K': pricePerGram * 21/24,
+    '18K': pricePerGram * 18/24
   };
 }
 
@@ -166,8 +177,8 @@ async function fetchGold() {
     const pricePerGram = pricePerOunce / 31.1035;
     const purities = calculatePurities(pricePerGram);
 
+    // Update main display
     document.getElementById("ounceRate").innerText = `$${pricePerOunce.toFixed(2)} / oz`;
-
     document.getElementById("rate24").innerText = `${(purities['24K']*USD_TO_KWD).toFixed(3)} KWD/g`;
     document.getElementById("rate22").innerText = `${(purities['22K']*USD_TO_KWD).toFixed(3)} KWD/g`;
     document.getElementById("rate21").innerText = `${(purities['21K']*USD_TO_KWD).toFixed(3)} KWD/g`;
@@ -175,13 +186,14 @@ async function fetchGold() {
 
     document.getElementById("timestamp").innerText = "Last updated: " + data.updatedAtReadable;
 
+    // Add to history
     const now = new Date();
-    goldHistory.push({time: now, purities});
+    goldHistory.push({ time: now, purities });
     if (goldHistory.length > 1000) goldHistory.shift();
 
     updateChart();
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching gold data:", err);
   }
 }
 
@@ -202,8 +214,8 @@ function initChart() {
       responsive: true,
       animation: { duration: 1000 },
       scales: {
-        x: { display: true, title: { display: true, text: 'Time' } },
-        y: { display: true, title: { display: true, text: 'Price (KWD/g)' } }
+        x: { title: { display: true, text: 'Time' } },
+        y: { title: { display: true, text: 'Price (KWD/g)' } }
       },
       plugins: { legend: { position: 'top' } }
     }
@@ -211,13 +223,13 @@ function initChart() {
 }
 
 function updateChart() {
-  if(!chart) initChart();
+  if (!chart) initChart();
 
   const now = new Date();
   let filtered = goldHistory;
-  if(timeframe === '10m') filtered = goldHistory.filter(d => now - d.time <= 10*60*1000);
-  if(timeframe === '1h') filtered = goldHistory.filter(d => now - d.time <= 60*60*1000);
-  if(timeframe === '1d') filtered = goldHistory.filter(d => now - d.time <= 24*60*60*1000);
+  if (timeframe === '10m') filtered = goldHistory.filter(d => now - d.time <= 10*60*1000);
+  if (timeframe === '1h') filtered = goldHistory.filter(d => now - d.time <= 60*60*1000);
+  if (timeframe === '1d') filtered = goldHistory.filter(d => now - d.time <= 24*60*60*1000);
 
   chart.data.labels = filtered.map(d => d.time.toLocaleTimeString());
   chart.data.datasets[0].data = filtered.map(d => d.purities['24K']*USD_TO_KWD);
@@ -232,7 +244,12 @@ function changeTimeframe(tf) {
   updateChart();
 }
 
+// Initial load
 fetchGold();
 initChart();
 setInterval(fetchGold, 10000);
 setInterval(updateChart, 1000);
+</script>
+
+</body>
+</html>
