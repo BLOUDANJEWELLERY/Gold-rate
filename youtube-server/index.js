@@ -1,33 +1,33 @@
 import express from 'express';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import cors from 'cors';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-// Allow Vercel frontend to call this server
 app.use(cors({
-  origin: ['https://bg-remover-silk.vercel.app/yt-download'], // Replace with your Vercel URL
+  origin: ['https://your-vercel-domain.vercel.app'], // replace with your Vercel URL
 }));
 
 app.get('/download', async (req, res) => {
   const { url } = req.query;
-
   if (!url) return res.status(400).send('Missing url parameter');
 
   try {
-    // Launch Puppeteer
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    // Launch Puppeteer using system Chromium
+    const browser = await puppeteer.launch({
+      headless: true,
+      executablePath: '/usr/bin/chromium',
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'networkidle2' });
 
-    // Extract video URL from YouTube player
     const videoUrl = await page.evaluate(() => {
       const playerResponse = window.ytInitialPlayerResponse;
       if (!playerResponse) return null;
-
       const formats = playerResponse.streamingData?.formats || [];
-      // Pick the first combined audio+video stream
       const stream = formats.find(f => f.mimeType.includes('video/mp4'));
       return stream?.url || null;
     });
@@ -36,7 +36,6 @@ app.get('/download', async (req, res) => {
 
     if (!videoUrl) return res.status(500).send('Unable to extract video URL');
 
-    // Redirect browser to the direct video URL for download
     res.redirect(videoUrl);
 
   } catch (err) {
