@@ -173,7 +173,7 @@ async function fetchUSDToKWD() {
     const res = await fetch("https://open.er-api.com/v6/latest/USD");
     const data = await res.json();
     if (data && data.rates && data.rates.KWD) {
-      USD_TO_KWD = data.rates.KWD;
+      USD_TO_KWD = data.rates.KWD + 0.02;
       console.log("USD/KWD rate:", USD_TO_KWD);
     }
   } catch(err) {
