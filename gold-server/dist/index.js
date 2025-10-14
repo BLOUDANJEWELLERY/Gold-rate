@@ -106,3 +106,15 @@ setInterval(async () => {
     await fetchGold();
 }, 60 * 1000); // 1 minute
 console.log("🚀 Gold rate tracker started...");
+const express_1 = __importDefault(require("express"));
+const app = (0, express_1.default)();
+app.get("/", (_req, res) => {
+    res.send("🏆 Gold rate tracker is alive");
+});
+app.get("/ping", (_req, res) => {
+    res.json({ status: "ok", time: new Date().toISOString() });
+});
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+    console.log(`🌐 Keep-alive server running on port ${PORT}`);
+});
