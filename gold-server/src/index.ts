@@ -136,18 +136,18 @@ setInterval(async () => {
 console.log("🚀 Gold rate tracker started...");
 
 
-import express from "express";
+import express, { Request, Response } from "express";
 const app = express();
 
-app.get("/", (_, res) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("🏆 Gold rate tracker is alive");
 });
 
-app.get("/ping", (_, res) => {
+app.get("/ping", (_req: Request, res: Response) => {
   res.json({ status: "ok", time: new Date().toISOString() });
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () =>
-  console.log(`🌐 Keep-alive server running on port ${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`🌐 Keep-alive server running on port ${PORT}`);
+});
