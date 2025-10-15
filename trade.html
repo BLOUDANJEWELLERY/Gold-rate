@@ -257,30 +257,6 @@
             height: 100%;
         }
 
-        @media (max-width: 800px) {
-            main > section, .span-full-grid, #technical-analysis, #top-stories, #powered-by-tv {
-                grid-column: span 2;
-            }
-
-            header {
-                flex-direction: column;
-                padding: 16px;
-                gap: 16px;
-            }
-
-            header #site-logo {
-                font-size: 28px;
-            }
-
-            main {
-                padding: 16px;
-                grid-gap: 16px;
-            }
-
-            .gold-price {
-                font-size: 36px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -292,7 +268,6 @@
        <!-- TradingView Widget BEGIN -->
 <div class="tradingview-widget-container">
   <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/XAUUSD/?exchange=OANDA" rel="noopener nofollow" target="_blank"><span class="blue-text">XAUUSD quote</span></a><span class="trademark"> by TradingView</span></div>
   <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
   {
   "symbol": "OANDA:XAUUSD",
