@@ -7,19 +7,39 @@
 </head>
 <body>
 <!-- TradingView Gold Rate Widget -->
-<div class="hidden" id="tradingview-container">
-  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
-  {
-    "symbol": "OANDA:XAUUSD",
-    "colorTheme": "light",
-    "isTransparent": true,
-    "locale": "en",
-    "width": 350
-  }
-  </script>
+<div class="tradingview-widget-wrapper">
+  <div id="tradingview-container">
+    <script
+      type="text/javascript"
+      src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js"
+      async
+    >
+      {
+        "symbol": "OANDA:XAUUSD",
+        "colorTheme": "light",
+        "isTransparent": true,
+        "locale": "en",
+        "width": 350
+      }
+    </script>
+  </div>
 </div>
 
 <style>
+  /* --- Black rectangle wrapper --- */
+  .tradingview-widget-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #000; /* black background */
+    border: 2px solid #222; /* subtle dark gray border */
+    border-radius: 8px; /* smooth corners */
+    padding: 16px;
+    width: fit-content;
+    margin: 20px auto;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); /* soft gold glow */
+  }
+
   /* --- Override TradingView Widget Styles --- */
   .tradingview-widget-container {
     display: inline-flex !important;
