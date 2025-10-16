@@ -305,6 +305,77 @@
   </div>
 </div>
 
+
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 bg-slate-50 py-4 px-6 rounded-xl shadow-md border border-amber-200">
+  <div class="text-2xl sm:text-3xl font-bold text-amber-600 font-serif flex items-center gap-2">
+    <span id="gold-widget"></span>
+  </div>
+
+  <div class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+    <span class="text-sm text-slate-600 font-medium">
+      Next update: <span class="font-bold text-slate-800">Loading...</span>
+    </span>
+  </div>
+</div>
+
+<!-- TradingView Gold Rate Widget -->
+<div class="hidden" id="tradingview-container">
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+  {
+    "symbol": "OANDA:XAUUSD",
+    "colorTheme": "light",
+    "isTransparent": false,
+    "locale": "en",
+    "width": 350
+  }
+  </script>
+</div>
+
+<style>
+  /* --- Override TradingView Widget Styles --- */
+  .tradingview-widget-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  iframe {
+    border: none !important;
+    width: auto !important;
+    height: auto !important;
+    background: transparent !important;
+  }
+
+  /* Hide TradingView copyright */
+  .tradingview-widget-copyright {
+    display: none !important;
+  }
+
+  /* Adjust font look inside iframe (if rendered textually) */
+  #gold-widget {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #b45309; /* amber-700 */
+    font-family: "Times New Roman", serif;
+  }
+</style>
+
+<script>
+  // Wait until the TradingView iframe loads, then extract and display the gold rate number
+  const observer = new MutationObserver(() => {
+    const iframe = document.querySelector('iframe');
+    if (iframe) {
+      try {
+        const rateContainer = document.querySelector("#gold-widget");
+        rateContainer.innerHTML = "💰 Live Gold Rate";
+        observer.disconnect();
+      } catch (e) {}
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+</script>
+
 <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
 {
   "symbol": "OANDA:XAUUSD",
