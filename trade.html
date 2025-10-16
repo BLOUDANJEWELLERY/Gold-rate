@@ -281,10 +281,43 @@
                 font-size: 36px;
             }
         }
+          #gold-widget {
+    width: 350px;
+    max-width: 100%;
+  }
     </style>
 </head>
 <body>
     
+    
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4 bg-white p-4 rounded-lg shadow">
+  <!-- Gold Rate Widget -->
+  <div class="text-2xl sm:text-3xl font-bold text-amber-600 font-serif">
+    <div id="gold-widget"></div>
+  </div>
+
+  <!-- Live Indicator + Countdown -->
+  <div class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full">
+    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+    <span class="text-sm text-slate-600 font-medium">
+      Live Gold Rate • <span class="font-bold text-slate-800">Updated Just Now</span>
+    </span>
+  </div>
+</div>
+
+<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
+{
+  "symbol": "OANDA:XAUUSD",
+  "colorTheme": "light",
+  "isTransparent": false,
+  "locale": "en",
+  "width": "100%",
+  "height": "60"
+}
+</script>
+
+
+
    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>
   {
   "symbol": "OANDA:XAUUSD",
